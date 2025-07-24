@@ -72,16 +72,37 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ### Installing Xtuner
 
 ```shell
-git clone https://github.com/InternLM/xtuner.git
+git clone -b v0.2.0rc0 https://github.com/InternLM/xtuner.git
 cd xtuner
 ```
 
-Modify `requirements/runtime.txt` with the following changes:
+Modify `requirements/runtime.txt` to the following dependencies:
 
 ```text
-bitsandbytes==0.42.0
-torchvision==0.19.0
+pyyaml
+datasets>=3.2.0
+einops
+loguru
+mmengine==0.10.6
+openpyxl
+peft>=0.14.0
+scikit-image
+scipy
+SentencePiece
+tiktoken
+torch==2.6
+torchvision==0.21.0
+transformers==4.48.0
+transformers_stream_generator
+decorator
 numpy==1.26.4
+```
+
+Modify `requirements/deepspeed.txt` to the following dependencies:
+
+```text
+deepspeed==0.16.2
+mpi4py
 ```
 
 Use the following command for installation:
@@ -92,7 +113,7 @@ pip install -e '.[all]'
 
 **Note**:
 
-- The default installation version of `torch` is the latest version. Please pay attention to match it with the version of `torch_npu`.
+- Please note that the versions of `torch`, `torch_npu` and `torchvision` must match.
 
 ### LoRA Fine-tuning
 
@@ -103,10 +124,12 @@ xtuner copy-cfg internlm2_5_chat_7b_qlora_oasst1_e3 .
 mv internlm2_5_chat_7b_qlora_oasst1_e3_copy.py internlm3_8b_instruct_lora_oasst1_e10.py
 ```
 
-The modifications to the configuration file `internlm3_8b_instruct_lora_oasst1_e10.py` are as follows:
+Download the model weights `internlm3-8b-instruction` and dataset `oasst1` by yourself，the modifications to the configuration file `internlm3_8b_instruct_lora_oasst1_e10.py` are as follows:
 
 ```python
-pretrained_model_name_or_path = 'internlm/internlm3-8b-instruct'
+pretrained_model_name_or_path = 'path/to/internlm3-8b-instruct'
+
+data_path = 'path/to/oasst1'
 
 max_epochs = 10
 
@@ -137,7 +160,7 @@ Run the following commands to start single-machine eight-card fine-tuning:
 NPROC_PER_NODE=8 xtuner train internlm3_8b_instruct_lora_oasst1_e10.py --deepspeed deepspeed_zero2
 ```
 
-The fine-tuning results are saved in the directory `./work_dirs/internlm3_8b_instruct_lora_oasst1_e10/iter_xxx.pth`.
+The fine-tuning results are saved in the directory `./work_dirs/internlm3_8b_instruct_lora_oasst1_e10`.
 The comparison of loss between NPU and GPU is as follows:
 
 ![xtuner_training_loss](../assets/npu/xtuner_training_loss_compare.png)

@@ -72,16 +72,37 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ### 安装 Xtuner
 
 ```shell
-git clone https://github.com/InternLM/xtuner.git
+git clone -b v0.2.0rc0 https://github.com/InternLM/xtuner.git
 cd xtuner
 ```
 
-修改`requirements/runtime.txt`，修改点如下：
+修改`requirements/runtime.txt`，修改为如下依赖：
 
 ```text
-bitsandbytes==0.42.0
-torchvision==0.19.0
+pyyaml
+datasets>=3.2.0
+einops
+loguru
+mmengine==0.10.6
+openpyxl
+peft>=0.14.0
+scikit-image
+scipy
+SentencePiece
+tiktoken
+torch==2.6
+torchvision==0.21.0
+transformers==4.48.0
+transformers_stream_generator
+decorator
 numpy==1.26.4
+```
+
+修改`requirements/deepspeed.txt`,修改为如下依赖：
+
+```text
+deepspeed==0.16.2
+mpi4py
 ```
 
 使用以下命令进行安装：
@@ -92,7 +113,7 @@ pip install -e '.[all]'
 
 **注意**:
 
-- 默认安装`torch`为最新版，请注意与`torch_npu`版本相匹配
+- 请注意`torch`与`torch_npu`、`torchvision`版本要相匹配
 
 ### LoRA 微调
 
@@ -103,10 +124,12 @@ xtuner copy-cfg internlm2_5_chat_7b_qlora_oasst1_e3 .
 mv internlm2_5_chat_7b_qlora_oasst1_e3_copy.py internlm3_8b_instruct_lora_oasst1_e10.py
 ```
 
-`internlm3_8b_instruct_lora_oasst1_e10.py`配置文件的修改点如下：
+自行下载模型权重`internlm3-8b-instruct`以及数据集`oasst1`，`internlm3_8b_instruct_lora_oasst1_e10.py`配置文件的修改点如下：
 
 ```python
-pretrained_model_name_or_path = 'internlm/internlm3-8b-instruct'
+pretrained_model_name_or_path = 'path/to/internlm3-8b-instruct'
+
+data_path = 'path/to/oasst1'
 
 max_epochs = 10
 
@@ -137,7 +160,7 @@ randomness = dict(seed=123, deterministic=True)
 NPROC_PER_NODE=8 xtuner train internlm3_8b_instruct_lora_oasst1_e10.py --deepspeed deepspeed_zero2
 ```
 
-微调后结果保存在`./work_dirs/internlm3_8b_instruct_lora_oasst1_e10/iter_xxx.pth`，NPU与GPU的loss对比如下：
+微调后结果保存在`./work_dirs/internlm3_8b_instruct_lora_oasst1_e10/`，NPU与GPU的loss对比如下：
 
 ![xtuner_training_loss](../assets/npu/xtuner_training_loss_compare.png)
 
